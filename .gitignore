@@ -1,0 +1,37 @@
+.netrwhist
+
+xmonad-x86_64-linux
+xmonad.errors
+xmonad.state
+xmonad.hi
+xmonad.o
+
+# OS X
+.DS_Store
+
+# Vim
+.*.sw[a-z]
+vim/vim/bundle
+
+# Emacs
+network-security.data
+.org-id-locations
+ac-comphist.dat
+auto-save-list/
+smex-items
+%backup%~
+bookmarks
+eln-cache
+secret.el
+transient
+projects
+session*
+history
+recentf
+recentf~
+eshell
+games
+tramp
+elpa
+url
+.lsp-session-v1
