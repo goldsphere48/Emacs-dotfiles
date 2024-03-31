@@ -35,3 +35,7 @@ tramp
 elpa
 url
 .lsp-session-v1
+projectile-bookmarks.eld
+projectile.cache
+projectile-bookmarks.eld
+org-persist

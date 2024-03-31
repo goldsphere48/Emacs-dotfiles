@@ -5,10 +5,20 @@
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (package-initialize)
 
+;; Fix for find, grep commands used by consult
+(when (eq system-type 'windows-nt)
+  (let ((my-path "C:/msys64/usr/bin"))
+    (setenv "PATH" (concat my-path ";" (getenv "PATH")))
+    (setq exec-path (append (list my-path) exec-path))))
+
+(setq package-check-signature nil)
+
 (use-package vertico
   :ensure t
   :init
-  (vertico-mode))
+  (vertico-mode)
+  (add-hook 'rfn-eshadow-update-overlay-hook #'vertico-directory-tidy)
+)
 
 (use-package consult
   :ensure t
@@ -75,14 +85,44 @@
   (setq company-minimum-prefix-length 1
 		company-idle-delay 0.01))
 
+(eval-after-load 'company
+  '(add-to-list 'company-backends 'company-cmake))
+
 (add-hook 'after-init-hook 'global-company-mode)
 
 (use-package glsl-mode
   :ensure t)
 
+(use-package cmake-mode
+  :ensure t)
+
 (use-package marginalia
   :ensure t
   :config (marginalia-mode 1))
+
+(use-package projectile
+  :ensure t
+  :config
+  (projectile-mode))
+
+(use-package spacious-padding
+  :ensure t
+  :config
+  (setq spacious-padding-widths
+		'( :internal-border-width 10
+           :header-line-width 4
+           :mode-line-width 6
+           :tab-width 4
+           :right-divider-width 10
+           :scroll-bar-width 8
+           :fringe-width 8))
+  (spacious-padding-mode 1))
+
+(use-package ef-themes
+  :ensure t
+  :config
+  (mapc #'disable-theme custom-enabled-themes)
+  (load-theme 'ef-elea-dark :no-confirm))
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -96,7 +136,7 @@
  '(indent-tabs-mode t)
  '(menu-bar-mode nil)
  '(package-selected-packages
-   '(consult marginalia company glsl-mode material-theme flycheck lsp-ui lsp-mode which-key orderless vertico use-package))
+   '(spacious-padding ef-themes cmake-mode projectile consult marginalia company glsl-mode material-theme flycheck lsp-ui lsp-mode which-key orderless vertico use-package))
  '(ring-bell-function 'ignore)
  '(scroll-bar-mode nil)
  '(tool-bar-mode nil))
