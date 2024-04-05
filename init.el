@@ -119,10 +119,48 @@
   (spacious-padding-mode 1))
 
 (use-package ef-themes
+  :ensure t)
+
+(add-hook 'after-init-hook
+          (lambda ()
+            (mapc #'disable-theme custom-enabled-themes)
+            (load-theme 'ef-elea-dark :no-confirm)))
+
+(use-package fontaine
   :ensure t
   :config
-  (mapc #'disable-theme custom-enabled-themes)
-  (load-theme 'ef-elea-dark :no-confirm))
+  (setq fontaine-presets
+        '((default
+            :default-family "Cascadia Code"
+            :default-weight normal
+            :default-height 120 ; 14pt
+            :fixed-pitch-family "Cascadia Code"
+            :fixed-pitch-weight normal
+            :fixed-pitch-height 120
+            :variable-pitch-family "Sans Serif"
+            :variable-pitch-weight normal
+            :variable-pitch-height 120)
+		  (jet-brains-mono
+            :default-family "JetBrains Mono"
+            :default-weight normal
+            :default-height 120 ; 14pt
+            :fixed-pitch-family "JetBrains Mono"
+            :fixed-pitch-weight normal
+            :fixed-pitch-height 120
+            :variable-pitch-family "JetBrains Mono"
+            :variable-pitch-weight normal
+            :variable-pitch-height 120)
+          (courier-new
+            :default-family "Courier New"
+            :default-weight normal
+            :default-height 120 ; 12pt
+            :fixed-pitch-family "Courier New"
+            :fixed-pitch-weight normal
+            :fixed-pitch-height 120
+            :variable-pitch-family "Sans Serif"
+            :variable-pitch-weight normal
+            :variable-pitch-height 120)))
+  (fontaine-set-preset 'jet-brains-mono))
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
