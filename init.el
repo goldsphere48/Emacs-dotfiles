@@ -123,8 +123,9 @@
 
 (add-hook 'after-init-hook
           (lambda ()
+			(setq ef-themes-to-toggle '(ef-maris-dark ef-frost))
             (mapc #'disable-theme custom-enabled-themes)
-            (load-theme 'ef-elea-dark :no-confirm)))
+            (load-theme 'ef-frost :no-confirm)))
 
 (use-package fontaine
   :ensure t
@@ -183,7 +184,24 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- )
+ '(fringe ((t :background "SystemWindow")))
+ '(header-line ((t :box (:line-width 4 :color "grey90" :style nil))))
+ '(header-line-highlight ((t :box (:color "SystemWindowText"))))
+ '(keycast-key ((t)))
+ '(line-number ((t :background "SystemWindow")))
+ '(mode-line ((t :box (:line-width 6 :color "grey75" :style nil))))
+ '(mode-line-active ((t :box (:line-width 6 :color "grey75" :style nil))))
+ '(mode-line-highlight ((t :box (:color "SystemWindowText"))))
+ '(mode-line-inactive ((t :box (:line-width 6 :color "grey90" :style nil))))
+ '(tab-bar-tab ((t :box (:line-width 4 :color "systembuttonface" :style nil))))
+ '(tab-bar-tab-inactive ((t :box (:line-width 4 :color "grey75" :style nil))))
+ '(tab-line-tab ((t)))
+ '(tab-line-tab-active ((t)))
+ '(tab-line-tab-inactive ((t)))
+ '(vertical-border ((t :background "SystemWindow" :foreground "SystemWindow")))
+ '(window-divider ((t (:background "SystemWindow" :foreground "SystemWindow"))))
+ '(window-divider-first-pixel ((t (:background "SystemWindow" :foreground "SystemWindow"))))
+ '(window-divider-last-pixel ((t (:background "SystemWindow" :foreground "SystemWindow")))))
 
 (set-face-attribute 'default nil :height 120)
 
