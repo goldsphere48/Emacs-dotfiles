@@ -64,10 +64,17 @@
   :hook
   (c-mode . lsp)
   (c++-mode . lsp)
+  (lua-mode . lsp)
   (lsp-mode . lsp-enable-which-key-integration)
   :commands lsp
   :config
+  (setq lsp-log-io t)
   (setq lsp-idle-delay 0.100))
+
+(add-hook 'lsp-after-apply-edits-hook
+          (lambda (operation)
+            (when (eq operation 'rename)
+              (projectile-save-project-buffers))))
 
 (use-package flycheck
   :ensure t
@@ -90,6 +97,9 @@
 
 (add-hook 'after-init-hook 'global-company-mode)
 
+(use-package magit
+  :ensure t)
+
 (use-package glsl-mode
   :ensure t)
 
@@ -104,6 +114,61 @@
   :ensure t
   :config
   (projectile-mode))
+
+(use-package dap-mode
+  :defer
+    :custom
+  (dap-auto-configure-mode t "Automatically configure dap.")
+  :hook (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra)))
+  :config
+  ;;; dap for c++
+  (require 'dap-lldb)
+
+  ;;; set the debugger executable (c++)
+  (setq dap-lldb-debug-program '("C:/Program Files/LLVM/bin/lldb-vscode"))
+
+  ;;; ask user for executable to debug if not specified explicitly (c++)
+  (setq dap-lldb-debugged-program-function (lambda () (read-file-name "Select file to debug.")))
+
+  ;;; default debug template for (c++)
+  (dap-register-debug-template
+   "C++ LLDB dap"
+   (list :type "lldb-vscode"
+         :cwd nil
+         :args nil
+         :request "launch"
+         :program nil))
+  
+  (defun dap-debug-create-or-edit-json-template ()
+    "Edit the C++ debugging configuration or create + edit if none exists yet."
+    (interactive)
+    (let ((filename (concat (projectile-project-root) "launch.json"))
+		  (default "~/.emacs.d/default-launch.json"))
+      (unless (file-exists-p filename)
+		(copy-file default filename))
+      (find-file-existing filename))))
+
+(use-package dashboard
+  :ensure t
+  :config
+  (dashboard-setup-startup-hook)
+  :custom
+  (dashboard-center-content t)
+  (dashboard-set-heading-icons t)
+  (dashboard-set-file-icons t))
+
+(use-package multiple-cursors
+  :ensure t
+  :config
+  (global-set-key (kbd "C-S-c C-S-c") 'mc/edit-lines)
+  (global-set-key (kbd "C->") 'mc/mark-next-like-this)
+  (global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
+  (global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this))
+
+(use-package all-the-icons
+  :if (display-graphic-p))
+
+(add-hook 'dired-mode-hook 'all-the-icons-dired-mode)
 
 (use-package spacious-padding
   :ensure t
@@ -175,7 +240,7 @@
  '(indent-tabs-mode t)
  '(menu-bar-mode nil)
  '(package-selected-packages
-   '(spacious-padding ef-themes cmake-mode projectile consult marginalia company glsl-mode material-theme flycheck lsp-ui lsp-mode which-key orderless vertico use-package))
+   '(magit dap-mode multiple-cursors dashboard lua-mode spacious-padding ef-themes cmake-mode projectile consult marginalia company glsl-mode material-theme flycheck lsp-ui lsp-mode which-key orderless vertico use-package))
  '(ring-bell-function 'ignore)
  '(scroll-bar-mode nil)
  '(tool-bar-mode nil))
