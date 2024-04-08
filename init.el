@@ -17,8 +17,7 @@
   :ensure t
   :init
   (vertico-mode)
-  (add-hook 'rfn-eshadow-update-overlay-hook #'vertico-directory-tidy)
-)
+  (add-hook 'rfn-eshadow-update-overlay-hook #'vertico-directory-tidy))
 
 (use-package consult
   :ensure t
@@ -68,8 +67,20 @@
   (lsp-mode . lsp-enable-which-key-integration)
   :commands lsp
   :config
+  (lsp-mode 0)
   (setq lsp-log-io t)
   (setq lsp-idle-delay 0.100))
+
+(use-package lsp-ui
+  :after lsp-mode
+  :commands lsp-ui-mode
+  :config
+  (lsp-ui-mode 0)
+  (setq lsp-ui-sideline-enable nil)
+  (setq lsp-ui-flycheck-enable t)
+  (setq lsp-ui-flycheck-list-position 'bottom)
+  (setq lsp-ui-flycheck-live-reporting t)
+  (setq lsp-ui-sideline-show-flycheck nil))
 
 (add-hook 'lsp-after-apply-edits-hook
           (lambda (operation)
@@ -81,6 +92,11 @@
   :config
   (add-hook 'after-init-hook #'global-flycheck-mode))
 
+(use-package flycheck-posframe
+  :ensure t
+  :after flycheck
+  :config (add-hook 'flycheck-mode-hook #'flycheck-posframe-mode))
+
 (use-package which-key
   :ensure t
   :config
@@ -89,8 +105,8 @@
 (use-package company
   :ensure t
   :config
-  (setq company-minimum-prefix-length 1
-		company-idle-delay 0.01))
+  (company-mode 0)
+  (setq company-minimum-prefix-length 1))
 
 (eval-after-load 'company
   '(add-to-list 'company-backends 'company-cmake))
@@ -106,6 +122,9 @@
 (use-package cmake-mode
   :ensure t)
 
+(use-package clang-format
+  :ensure t)
+
 (use-package marginalia
   :ensure t
   :config (marginalia-mode 1))
@@ -118,7 +137,9 @@
 (use-package dap-mode
   :defer
     :custom
-  (dap-auto-configure-mode t "Automatically configure dap.")
+	(dap-auto-configure-mode t "Automatically configure dap.")
+	(dap-auto-configure-features
+	 '(locals breakpoints expressions tooltip)  "Remove the button panel in the top.")
   :hook (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra)))
   :config
   ;;; dap for c++
@@ -240,7 +261,7 @@
  '(indent-tabs-mode t)
  '(menu-bar-mode nil)
  '(package-selected-packages
-   '(magit dap-mode multiple-cursors dashboard lua-mode spacious-padding ef-themes cmake-mode projectile consult marginalia company glsl-mode material-theme flycheck lsp-ui lsp-mode which-key orderless vertico use-package))
+   '(flycheck-posframe clang-format magit dap-mode multiple-cursors dashboard lua-mode spacious-padding ef-themes cmake-mode projectile consult marginalia company glsl-mode material-theme flycheck lsp-ui lsp-mode which-key orderless vertico use-package))
  '(ring-bell-function 'ignore)
  '(scroll-bar-mode nil)
  '(tool-bar-mode nil))
@@ -283,10 +304,11 @@
 (setq-default indent-tabs-mode 't)
 (setq-default tab-width 4)
 (setq c-basic-offset 4)
-
 (setq make-backup-files nil)
 (setq backup-inhibited nil)
 (setq create-lockfiles nil)
+
+(delete-selection-mode 1)
 
 (defun powershell (&optional buffer)
   "Launches a PowerShell in BUFFER *powershell* and switch to it."
@@ -332,8 +354,36 @@
   (forward-line 1)
   (yank))
 
+(defun flycheck-list-errors-toggle ()
+  "Toggle the error list for the current buffer, ensuring it opens at the bottom."
+  (interactive)
+  (if (not (get-buffer flycheck-error-list-buffer))
+      (call-interactively 'flycheck-list-errors))
+  (let ((flycheck-errors-window (get-buffer-window flycheck-error-list-buffer)))
+    (if (window-live-p flycheck-errors-window)
+        (delete-window flycheck-errors-window)
+      (display-buffer-at-bottom
+       (get-buffer flycheck-error-list-buffer)
+       '((window-height . 0.3))))))
+
+(defun insert-tab-char ()
+  "Insert a tab character."
+  (interactive)
+  (insert "\t"))
+
+(defun my-backtab-action ()
+  "A custom action for backtab (Shift+Tab) to decrease indentation."
+  (interactive)
+  (if (use-region-p)
+      (indent-rigidly (region-beginning) (region-end) (- tab-width))
+    (indent-rigidly (line-beginning-position) (line-end-position) (- tab-width))))
+
+(windmove-default-keybindings)
 (global-set-key (kbd "M-<up>") 'move-line-up)
-(global-set-key (kbd "\C-c i") 'open-emacs-config-file)
-(global-set-key (kbd "\C-c t") 'open-test-project)
 (global-set-key (kbd "M-<down>") 'move-line-down)
+(global-set-key (kbd "\C-c i") 'open-emacs-config-file)
+(global-set-key (kbd "\C-c e") 'flycheck-list-errors-toggle)
+(global-set-key (kbd "\C-c t") 'open-test-project)
+(global-set-key (kbd "C-<tab>") 'insert-tab-char)
+(global-set-key (kbd "<backtab>") 'my-backtab-action)
 (global-set-key "\C-c\C-d" 'duplicate-line)
