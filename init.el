@@ -67,15 +67,15 @@
   (lsp-mode . lsp-enable-which-key-integration)
   :commands lsp
   :config
-  (lsp-mode 0)
-  (setq lsp-log-io t)
+  (setq read-process-output-max (* 1024 1024))
+  (setq gc-cons-threshold (* 100 1024 1024))
+  (setq lsp-use-plists t)
   (setq lsp-idle-delay 0.100))
 
 (use-package lsp-ui
   :after lsp-mode
   :commands lsp-ui-mode
   :config
-  (lsp-ui-mode 0)
   (setq lsp-ui-sideline-enable nil)
   (setq lsp-ui-flycheck-enable t)
   (setq lsp-ui-flycheck-list-position 'bottom)
@@ -105,7 +105,6 @@
 (use-package company
   :ensure t
   :config
-  (company-mode 0)
   (setq company-minimum-prefix-length 1))
 
 (eval-after-load 'company
