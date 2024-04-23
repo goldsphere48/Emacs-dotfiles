@@ -59,23 +59,36 @@
 (use-package lsp-mode
   :ensure t
   :init
+  (defun setup-lsp-diagnostics-for-scons ()
+    (when (member (file-name-nondirectory buffer-file-name)
+                  '("SConstruct" "SConscript"))
+      ;; Установка диагностики в 'none' только для этих файлов
+      (setq-local lsp-diagnostics-provider :none)))
   (setq lsp-keymap-prefix "C-c l")
   :hook
   (c-mode . lsp)
   (c++-mode . lsp)
   (lua-mode . lsp)
+  (python-mode . lsp)
   (lsp-mode . lsp-enable-which-key-integration)
+  (lsp-mode . setup-lsp-diagnostics-for-scons)
   :commands lsp
   :config
   (setq read-process-output-max (* 1024 1024))
   (setq gc-cons-threshold (* 100 1024 1024))
-  (setq lsp-use-plists t)
-  (setq lsp-idle-delay 0.100))
+  (setq lsp-idle-delay 0.100)
+  (define-key lsp-mode-map [S-f12] #'lsp-find-references)
+  (define-key lsp-mode-map [f12] #'lsp-find-definition)
+  (define-key lsp-mode-map [C-f12] #'lsp-find-declaration)
+  (define-key lsp-mode-map (kbd "\C-r\C-r") #'lsp-rename)
+  (global-set-key (kbd "M-<return>") #'lsp-execute-code-action))
 
 (use-package lsp-ui
   :after lsp-mode
   :commands lsp-ui-mode
   :config
+  (setq lsp-ui-peek-enable t)
+  (setq lsp-ui-doc-enable t)
   (setq lsp-ui-sideline-enable nil)
   (setq lsp-ui-flycheck-enable t)
   (setq lsp-ui-flycheck-list-position 'bottom)
@@ -87,9 +100,21 @@
             (when (eq operation 'rename)
               (projectile-save-project-buffers))))
 
+(defun disable-flymake-for-scons ()
+  (when (member (file-name-nondirectory buffer-file-name)
+                '("SConstruct" "SConscript"))
+    (flymake-mode -1)))
+
+(defun disable-flycheck-for-scons ()
+  (when (member (file-name-nondirectory buffer-file-name)
+                '("SConstruct" "SConscript"))
+    (flycheck-mode -1)))
+
 (use-package flycheck
   :ensure t
   :config
+  (add-hook 'find-file-hook 'disable-flycheck-for-scons)
+  (add-hook 'find-file-hook 'disable-flymake-for-scons)
   (add-hook 'after-init-hook #'global-flycheck-mode))
 
 (use-package flycheck-posframe
@@ -117,6 +142,9 @@
 
 (use-package glsl-mode
   :ensure t)
+
+(add-to-list 'auto-mode-alist '("SConstruct\\'" . python-mode))
+(add-to-list 'auto-mode-alist '("SConscript\\'" . python-mode))
 
 (use-package cmake-mode
   :ensure t)
@@ -146,10 +174,11 @@
 
   ;;; set the debugger executable (c++)
   (setq dap-lldb-debug-program '("C:/Program Files/LLVM/bin/lldb-vscode"))
-
+  (setq dap-external-terminal t)
   ;;; ask user for executable to debug if not specified explicitly (c++)
   (setq dap-lldb-debugged-program-function (lambda () (read-file-name "Select file to debug.")))
-
+  (global-set-key [f5] #'dap-debug)
+  (global-set-key (kbd "C-'") #'dap-breakpoint-toggle)
   ;;; default debug template for (c++)
   (dap-register-debug-template
    "C++ LLDB dap"
@@ -210,7 +239,7 @@
           (lambda ()
 			(setq ef-themes-to-toggle '(ef-maris-dark ef-frost))
             (mapc #'disable-theme custom-enabled-themes)
-            (load-theme 'ef-frost :no-confirm)))
+            (load-theme 'ef-maris-dark :no-confirm)))
 
 (use-package fontaine
   :ensure t
@@ -260,7 +289,7 @@
  '(indent-tabs-mode t)
  '(menu-bar-mode nil)
  '(package-selected-packages
-   '(flycheck-posframe clang-format magit dap-mode multiple-cursors dashboard lua-mode spacious-padding ef-themes cmake-mode projectile consult marginalia company glsl-mode material-theme flycheck lsp-ui lsp-mode which-key orderless vertico use-package))
+   '(python-black zig-mode elpy lsp-pyright flycheck-posframe clang-format magit dap-mode multiple-cursors dashboard lua-mode spacious-padding ef-themes cmake-mode projectile consult marginalia company glsl-mode material-theme flycheck lsp-ui lsp-mode which-key orderless vertico use-package))
  '(ring-bell-function 'ignore)
  '(scroll-bar-mode nil)
  '(tool-bar-mode nil))
@@ -308,15 +337,6 @@
 (setq create-lockfiles nil)
 
 (delete-selection-mode 1)
-
-(defun powershell (&optional buffer)
-  "Launches a PowerShell in BUFFER *powershell* and switch to it."
-  (interactive)
-  (let ((buffer (or buffer "*powershell*"))
-        (powershell-prog "c:\\windows\\system32\\WindowsPowerShell\\v1.0\\powershell.exe")
-        (init-command "chcp 65001\n"))
-    (make-comint-in-buffer "powershell" buffer powershell-prog nil "-NoExit" "-Command" init-command)
-    (switch-to-buffer buffer)))
 
 (defun move-line-up()
   "Move up current line."
@@ -376,6 +396,22 @@
   (if (use-region-p)
       (indent-rigidly (region-beginning) (region-end) (- tab-width))
     (indent-rigidly (line-beginning-position) (line-end-position) (- tab-width))))
+
+;;; Indentation for python
+
+;; Ignoring electric indentation
+(defun electric-indent-ignore-python (char)
+  "Ignore electric indentation for python-mode"
+  (if (equal major-mode 'python-mode)
+      'no-indent
+    nil))
+(add-hook 'electric-indent-functions 'electric-indent-ignore-python)
+
+;; Enter key executes newline-and-indent
+(defun set-newline-and-indent ()
+  "Map the return key with `newline-and-indent'"
+  (local-set-key (kbd "RET") 'newline-and-indent))
+(add-hook 'python-mode-hook 'set-newline-and-indent)
 
 (windmove-default-keybindings)
 (global-set-key (kbd "M-<up>") 'move-line-up)
