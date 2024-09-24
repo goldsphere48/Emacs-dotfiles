@@ -12,6 +12,14 @@
 
 (setq package-check-signature nil)
 
+;; Fix for find, grep commands used by consult
+(when (eq system-type 'windows-nt)
+  (let ((my-path "C:/msys64/usr/bin"))
+    (setenv "PATH" (concat my-path ";" (getenv "PATH")))
+    (setq exec-path (append (list my-path) exec-path))))
+
+(load-file "~/.emacs.d/powershell.el")
+
 ;; ----------------------------------
 ;; Basic Settings
 ;; ----------------------------------
@@ -117,6 +125,11 @@
   (dashboard-set-file-icons t))
 
 ;; ----------------------------------
+;; Mode Line
+;; ----------------------------------
+
+
+;; ----------------------------------
 ;; Completion, Minibuffer, and Navigation
 ;; ----------------------------------
 (use-package vertico
@@ -155,10 +168,6 @@
 (use-package lsp-mode
   :ensure t
   :init
-  (defun setup-lsp-diagnostics-for-scons ()
-    (when (member (file-name-nondirectory buffer-file-name)
-                  '("SConstruct" "SConscript"))
-      (setq-local lsp-diagnostics-provider :none)))
   (setq lsp-keymap-prefix "C-c l")
   :hook ((c-mode c++-mode lua-mode python-mode) . lsp)
   :commands lsp
