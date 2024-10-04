@@ -1,3 +1,6 @@
+;;; Commentary: Emacs config
+;;; package --- init
+
 ;; ----------------------------------
 ;; Package Management & Repositories
 ;; ----------------------------------
@@ -11,12 +14,12 @@
 (package-initialize)
 
 (setq package-check-signature nil)
+(setq custom-file "~/.emacs.d/custom.el")
 
 ;; Fix for find, grep commands used by consult
 (when (eq system-type 'windows-nt)
-  (let ((my-path "C:/msys64/usr/bin"))
-    (setenv "PATH" (concat my-path ";" (getenv "PATH")))
-    (setq exec-path (append (list my-path) exec-path))))
+  (add-to-list 'exec-path "C:/msys64/usr/bin")
+  (add-to-list 'exec-path "C:/msys64/mingw/usr/bin"))
 
 (load-file "~/.emacs.d/powershell.el")
 
@@ -40,30 +43,44 @@
       scroll-conservatively 10000
       scroll-step 1
       indent-tabs-mode 't
-      tab-width 4
-      c-basic-offset 4
       make-backup-files nil
       backup-inhibited nil
-      create-lockfiles nil)
+      create-lockfiles nil
+      inhibit-startup-screen 't)
+
+(setq-default tab-width 4)
+(setq-default c-basic-offset 4)
+(setq-default indent-tabs-mode 't)
+
+(prefer-coding-system 'utf-8)
+(set-default-coding-systems 'utf-8)
+(set-terminal-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
+(setq default-buffer-file-coding-system 'utf-8)
+(setq coding-system-for-read 'utf-8)
+(setq coding-system-for-write 'utf-8)
+
+;; Настроить кодировку для shell-mode
+(add-hook 'shell-mode-hook
+          (lambda ()
+            (set-buffer-process-coding-system 'utf-8-unix 'utf-8-unix)))
+
+
+;; Настроить кодировку для eshell
+(add-hook 'eshell-mode-hook
+          (lambda ()
+            (set-buffer-process-coding-system 'utf-8-unix 'utf-8-unix)))
+
+
+;; Настроить кодировку для powershell
+(add-hook 'powershell-mode-hook
+          (lambda ()
+            (set-buffer-process-coding-system 'utf-8-unix 'utf-8-unix)))
+
 
 ;; ----------------------------------
 ;; UI Packages
 ;; ----------------------------------
-
-;; Use spacious-padding for UI spacing
-(use-package spacious-padding
-  :ensure t
-  :config
-  (setq spacious-padding-widths
-        '(:internal-border-width 10
-          :header-line-width 4
-          :mode-line-width 6
-          :tab-width 4
-          :right-divider-width 10
-          :scroll-bar-width 8
-          :fringe-width 8))
-  (spacious-padding-mode 1))
-
 (use-package fontaine
   :ensure t
   :config
@@ -97,33 +114,28 @@
             :fixed-pitch-height 120
             :variable-pitch-family "Sans Serif"
             :variable-pitch-weight normal
+            :variable-pitch-height 120)
+	  (iosevka
+            :default-family "IosevkaTerm NF"
+            :default-weight normal
+            :default-height 120
+            :fixed-pitch-family "IosevkaTerm NF"
+            :fixed-pitch-weight normal
+            :fixed-pitch-height 120
+            :variable-pitch-family "IosevkaTerm NF"
+            :variable-pitch-weight normal
             :variable-pitch-height 120)))
   (fontaine-set-preset 'jet-brains-mono))
 
-;; Set themes
-(use-package ef-themes
-  :ensure t
-  :init
-  (add-hook 'after-init-hook
-            (lambda ()
-              (setq ef-themes-to-toggle '(ef-maris-dark ef-frost))
-              (mapc #'disable-theme custom-enabled-themes)
-              (load-theme 'ef-maris-dark :no-confirm))))
+;; Solarized theme
+;; (load-theme 'solarized-light t)
+(setq catppuccin-flavor 'latte)
+(load-theme 'catppuccin :no-confirm)
+
 
 ;; Icons for dashboard and general UI
 (use-package all-the-icons
   :if (display-graphic-p))
-
-;; Dashboard setup
-(use-package dashboard
-  :ensure t
-  :config
-  (dashboard-setup-startup-hook)
-  :custom
-  (dashboard-center-content t)
-  (dashboard-set-heading-icons t)
-  (dashboard-set-file-icons t))
-
 ;; ----------------------------------
 ;; Mode Line
 ;; ----------------------------------
@@ -187,6 +199,9 @@
   (setq lsp-ui-doc-enable t
         lsp-ui-sideline-enable nil))
 
+(with-eval-after-load 'lsp-mode
+  (add-hook 'lsp-mode-hook #'lsp-enable-which-key-integration))
+
 (use-package flycheck
   :ensure t
   :config
@@ -207,28 +222,11 @@
   :ensure t)
 
 (use-package cmake-mode
-  :ensure t)
+  :ensure t
+  :init (setq-default cmake-tab-width 4))
 
 (use-package clang-format
   :ensure t)
-
-;; ----------------------------------
-;; Debugging & DAP Mode
-;; ----------------------------------
-(use-package dap-mode
-  :defer
-  :custom
-  (dap-auto-configure-mode t)
-  :config
-  (require 'dap-lldb)
-  (setq dap-lldb-debug-program '("C:/Program Files/LLVM/bin/lldb-vscode")
-        dap-external-terminal t)
-  (global-set-key [f5] #'dap-debug)
-  (global-set-key (kbd "C-'") #'dap-breakpoint-toggle)
-  (dap-register-debug-template "C++ LLDB dap"
-                               (list :type "lldb-vscode"
-                                     :cwd nil :args nil
-                                     :request "launch" :program nil)))
 
 ;; ----------------------------------
 ;; Miscellaneous Packages
@@ -281,43 +279,10 @@
 (global-set-key (kbd "M-<up>") 'move-line-up)
 (global-set-key (kbd "M-<down>") 'move-line-down)
 (global-set-key (kbd "\C-c i") 'open-emacs-config-file)
-(global-set-key (kbd "\C-c e") 'flycheck-list-errors-toggle)
 (global-set-key (kbd "\C-c t") 'open-test-project)
 (global-set-key (kbd "C-<tab>") 'insert-tab-char)
 (global-set-key (kbd "<backtab>") 'my-backtab-action)
 (global-set-key "\C-c\C-d" 'duplicate-line)
 
-;; ----------------------------------
-;; Emacs generated
-;; ----------------------------------
-
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(all-the-icons clang-format cmake-mode glsl-mode magit company flycheck-posframe flycheck lsp-mode which-key marginalia consult orderless vertico dashboard ef-themes fontaine spacious-padding)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(fringe ((t :background "SystemWindow")))
- '(header-line ((t :box (:line-width 4 :color "grey90" :style nil))))
- '(header-line-highlight ((t :box (:color "SystemWindowText"))))
- '(keycast-key ((t)))
- '(line-number ((t :background "SystemWindow")))
- '(mode-line ((t :box (:line-width 6 :color "grey75" :style nil))))
- '(mode-line-active ((t :box (:line-width 6 :color "grey75" :style nil))))
- '(mode-line-highlight ((t :box (:color "SystemWindowText"))))
- '(mode-line-inactive ((t :box (:line-width 6 :color "grey90" :style nil))))
- '(tab-bar-tab ((t :box (:line-width 4 :color "systembuttonface" :style nil))))
- '(tab-bar-tab-inactive ((t :box (:line-width 4 :color "grey75" :style nil))))
- '(tab-line-tab ((t)))
- '(tab-line-tab-active ((t)))
- '(tab-line-tab-inactive ((t)))
- '(vertical-border ((t :background "SystemWindow" :foreground "SystemWindow")))
- '(window-divider ((t (:background "SystemWindow" :foreground "SystemWindow"))))
- '(window-divider-first-pixel ((t (:background "SystemWindow" :foreground "SystemWindow"))))
- '(window-divider-last-pixel ((t (:background "SystemWindow" :foreground "SystemWindow")))))
+(provide 'init)
+;;; init.el ends here
